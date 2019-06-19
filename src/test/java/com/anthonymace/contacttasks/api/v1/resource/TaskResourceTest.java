@@ -80,19 +80,21 @@ public class TaskResourceTest {
 
     @Test
     public void shouldReturnJsonArrayForGetTasksWithIntegerContactId() throws Exception {
-        JSONArray expectedResponse = new JSONObject(
+        JSONArray expectedApiResponse = new JSONObject(
                 readFile("src/test/resources/get-tasks-response.json")
         ).getJSONArray("tasks");
 
+        JSONArray filteredResponse = new JSONArray(readFile("src/test/resources/incomplete-tasks.json"));
+
         when(tasksService.contactExists(anyInt())).thenReturn(true);
-        when(tasksService.getTasks(anyInt())).thenReturn(expectedResponse);
+        when(tasksService.getTasks(anyInt())).thenReturn(expectedApiResponse);
 
         MockHttpServletResponse response = mockMvc.perform(get("/contact/1/tasks/incomplete"))
                 .andDo(print())
                 .andReturn()
                 .getResponse();
 
-        assertEquals(expectedResponse.length(), new JSONArray(response.getContentAsString()).length());
+        assertEquals(filteredResponse.length(), new JSONArray(response.getContentAsString()).length());
     }
 
     @Test

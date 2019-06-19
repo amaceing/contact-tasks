@@ -8,7 +8,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @RestController
 public class TaskResource {
@@ -23,7 +26,11 @@ public class TaskResource {
             return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON_UTF8).body(response);
         }
         JSONArray tasks = tasksService.getTasks(contactId);
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON_UTF8).body(tasks.toString());
+        List<JSONObject> incompleteTasks = StreamSupport.stream(tasks.spliterator(), false)
+                .map(JSONObject.class::cast)
+                .filter(task -> task.getBoolean("completed"))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON_UTF8).body(incompleteTasks.toString());
     }
 
     @RequestMapping(
