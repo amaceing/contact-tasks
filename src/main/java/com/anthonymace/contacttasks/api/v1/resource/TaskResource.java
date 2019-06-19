@@ -19,12 +19,15 @@ public class TaskResource {
     private TasksService tasksService = new TasksService();
 
     @RequestMapping(value = "contact/{contactId}/tasks/incomplete", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity getTasks(@PathVariable(value="contactId") int contactId) {
+    public ResponseEntity getTasks(
+            @PathVariable(value="contactId") int contactId,
+            @RequestParam(value="accessToken") String accessToken) {
+        tasksService.setAccessToken(accessToken);
+
         if (!tasksService.contactExists(contactId)) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Contact does not exist");
-            return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON_UTF8).body(response);
+            return contactDoesNotExist();
         }
+
         JSONArray tasks = tasksService.getTasks(contactId);
         List<JSONObject> incompleteTasks = StreamSupport.stream(tasks.spliterator(), false)
                 .map(JSONObject.class::cast)
@@ -39,13 +42,24 @@ public class TaskResource {
             consumes="application/json",
             produces = "application/json"
     )
-    public ResponseEntity createTask(@PathVariable(value="contactId") int contactId, @RequestBody Map<String, Object> taskInfo) {
+    public ResponseEntity createTask(
+            @PathVariable(value="contactId") int contactId,
+            @RequestParam(value="accessToken") String accessToken,
+            @RequestBody Map<String, Object> taskInfo
+    ) {
+        tasksService.setAccessToken(accessToken);
+
         if (!tasksService.contactExists(contactId)) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Contact does not exist");
-            return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON_UTF8).body(response);
+            return contactDoesNotExist();
         }
+
         JSONObject createdTask = tasksService.createTask(contactId, new JSONObject(taskInfo));
         return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.APPLICATION_JSON_UTF8).body(createdTask.toString());
+    }
+
+    private ResponseEntity contactDoesNotExist() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Contact does not exist");
+        return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON_UTF8).body(response);
     }
 }

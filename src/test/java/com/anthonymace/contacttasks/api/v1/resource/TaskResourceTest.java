@@ -67,18 +67,6 @@ public class TaskResourceTest {
     }
 
     @Test
-    public void shouldReturn200ForGetTasksWithIntegerContactId() throws Exception {
-        when(tasksService.contactExists(anyInt())).thenReturn(true);
-        when(tasksService.getTasks(anyInt())).thenReturn(new JSONArray());
-
-        MockHttpServletResponse response = mockMvc.perform(get("/contact/1/tasks/incomplete"))
-                .andReturn()
-                .getResponse();
-
-        assertEquals(HttpStatus.SC_OK, response.getStatus());
-    }
-
-    @Test
     public void shouldReturnJsonArrayForGetTasksWithIntegerContactId() throws Exception {
         JSONArray expectedApiResponse = new JSONObject(
                 readFile("src/test/resources/get-tasks-response.json")
@@ -89,7 +77,7 @@ public class TaskResourceTest {
         when(tasksService.contactExists(anyInt())).thenReturn(true);
         when(tasksService.getTasks(anyInt())).thenReturn(expectedApiResponse);
 
-        MockHttpServletResponse response = mockMvc.perform(get("/contact/1/tasks/incomplete"))
+        MockHttpServletResponse response = mockMvc.perform(get("/contact/1/tasks/incomplete?accessToken=someAccessToken"))
                 .andDo(print())
                 .andReturn()
                 .getResponse();
@@ -108,7 +96,7 @@ public class TaskResourceTest {
         when(tasksService.contactExists(anyInt())).thenReturn(true);
         when(tasksService.createTask(anyInt(), any())).thenReturn(expectedResponse);
 
-        MockHttpServletResponse response = mockMvc.perform(post("/contact/1/task")
+        MockHttpServletResponse response = mockMvc.perform(post("/contact/1/task?accessToken=someAccessToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(createTaskInput))
                 .andDo(print())
@@ -124,7 +112,7 @@ public class TaskResourceTest {
 
         when(tasksService.contactExists(anyInt())).thenReturn(false);
 
-        MockHttpServletResponse response = mockMvc.perform(get("/contact/1/tasks/incomplete"))
+        MockHttpServletResponse response = mockMvc.perform(get("/contact/1/tasks/incomplete?accessToken=someAccessToken"))
                 .andDo(print())
                 .andReturn()
                 .getResponse();
@@ -141,7 +129,7 @@ public class TaskResourceTest {
 
         when(tasksService.contactExists(anyInt())).thenReturn(false);
 
-        MockHttpServletResponse response = mockMvc.perform(post("/contact/1/task")
+        MockHttpServletResponse response = mockMvc.perform(post("/contact/1/task?accessToken=someAccessToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(createTaskInput))
                 .andDo(print())

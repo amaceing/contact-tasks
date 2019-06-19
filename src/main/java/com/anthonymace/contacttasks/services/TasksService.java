@@ -6,6 +6,8 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import javax.validation.constraints.NotNull;
 import java.util.Arrays;
 
 @Service
@@ -14,12 +16,20 @@ public class TasksService {
     RestTemplate tasksRequest = new RestTemplate();
     private String apiUrl = "https://api.infusionsoft.com/crm/rest/v1/%s";
 
+    @NotNull
+    private String accessToken;
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
     public JSONArray getTasks(int contactId) {
         String contactTasksUrl = String.format("tasks?contact_id=%d", contactId);
         String tasksResourceUrl = String.format(apiUrl, contactTasksUrl);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON_UTF8));
+        headers.setBearerAuth(this.accessToken);
 
         HttpEntity<String> request = new HttpEntity<>(headers);
         ResponseEntity<String> tasksResponse =
@@ -34,6 +44,7 @@ public class TasksService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON_UTF8));
+        headers.setBearerAuth(this.accessToken);
 
         HttpEntity<JSONObject> request = new HttpEntity<>(task, headers);
         ResponseEntity<String> createTaskResponse =
@@ -48,6 +59,7 @@ public class TasksService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON_UTF8));
+        headers.setBearerAuth(this.accessToken);
 
         HttpEntity<String> request = new HttpEntity<>(headers);
 
