@@ -55,7 +55,8 @@ public class TasksService {
             tasksRequest.exchange(contactResourceUrl, HttpMethod.GET, request, String.class);
         } catch (HttpClientErrorException e) {
             // .exchange throws an exception when it 404s (from the stub), hard to test
-            // but this is gross
+            // but this is gross.
+            // REVISIT
             return false;
         }
         return true;
