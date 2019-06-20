@@ -21,7 +21,8 @@ public class TaskResource {
     @RequestMapping(value = "contact/{contactId}/tasks/incomplete", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity getTasks(
             @PathVariable(value="contactId") int contactId,
-            @RequestParam(value="accessToken") String accessToken) {
+            @RequestHeader(value="access-token") String accessToken
+    ) {
         tasksService.setAccessToken(accessToken);
 
         if (!tasksService.contactExists(contactId)) {
@@ -31,7 +32,7 @@ public class TaskResource {
         JSONArray tasks = tasksService.getTasks(contactId);
         List<JSONObject> incompleteTasks = StreamSupport.stream(tasks.spliterator(), false)
                 .map(JSONObject.class::cast)
-                .filter(task -> task.getBoolean("completed"))
+                .filter(task -> !task.getBoolean("completed"))
                 .collect(Collectors.toList());
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON_UTF8).body(incompleteTasks.toString());
     }
@@ -44,7 +45,7 @@ public class TaskResource {
     )
     public ResponseEntity createTask(
             @PathVariable(value="contactId") int contactId,
-            @RequestParam(value="accessToken") String accessToken,
+            @RequestHeader(value="access-token") String accessToken,
             @RequestBody Map<String, Object> taskInfo
     ) {
         tasksService.setAccessToken(accessToken);
