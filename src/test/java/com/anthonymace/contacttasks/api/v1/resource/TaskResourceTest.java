@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
@@ -50,7 +51,7 @@ public class TaskResourceTest {
 
     @Test
     public void shouldReturn400ForGetTasksNonIntegerContactId() throws Exception {
-        mockMvc.perform(get("/contact/hello/tasks/incomplete")).andDo(print())
+        mockMvc.perform(get("/contact/hello/tasks")).andDo(print())
                 .andExpect(status().isBadRequest());
     }
 
@@ -69,15 +70,26 @@ public class TaskResourceTest {
 
     @Test
     public void shouldReturn400ForGetTaskMissingAccessToken() throws Exception {
-        mockMvc.perform(get("/contact/1/tasks/incomplete")).andDo(print())
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/contact/1/tasks")).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(status().reason(containsString("Missing request header 'access-token'")));
+    }
+
+    @Test
+    public void shouldReturn400ForGetTaskMissingCompletedParam() throws Exception {
+        mockMvc.perform(get("/contact/1/tasks")
+                .header("access-token", "someAccessToken"))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(status().reason(containsString("'completed' is not present")));
     }
 
     @Test
     public void shouldReturn400ForCreateTasksMissingAccessToken() throws Exception {
         mockMvc.perform(post("/contact/1/task").contentType(MediaType.APPLICATION_JSON_UTF8).content("{}"))
                 .andDo(print())
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(status().reason(containsString("Missing request header 'access-token'")));;
     }
 
     @Test
@@ -91,8 +103,9 @@ public class TaskResourceTest {
         when(tasksService.contactExists(anyInt())).thenReturn(true);
         when(tasksService.getTasks(anyInt())).thenReturn(expectedApiResponse);
 
-        MockHttpServletResponse response = mockMvc.perform(get("/contact/1/tasks/incomplete")
-                .header("access-token", "someAccessToken"))
+        MockHttpServletResponse response = mockMvc.perform(get("/contact/1/tasks")
+                .header("access-token", "someAccessToken")
+                .param("completed", "false"))
                 .andDo(print())
                 .andReturn()
                 .getResponse();
@@ -109,7 +122,7 @@ public class TaskResourceTest {
         String createTaskInput = expectedResponse.toString();
 
         when(tasksService.contactExists(anyInt())).thenReturn(true);
-        when(tasksService.createTask(anyInt(), any())).thenReturn(expectedResponse);
+        when(tasksService.createTask(any())).thenReturn(expectedResponse);
 
         MockHttpServletResponse response = mockMvc.perform(post("/contact/1/task")
                 .header("access-token", "someAccessToken")
@@ -128,15 +141,15 @@ public class TaskResourceTest {
 
         when(tasksService.contactExists(anyInt())).thenReturn(false);
 
-        MockHttpServletResponse response = mockMvc.perform(get("/contact/1/tasks/incomplete")
-                .header("access-token", "someAccessToken"))
+        MockHttpServletResponse response = mockMvc.perform(get("/contact/1/tasks")
+                .header("access-token", "someAccessToken")
+                .param("completed", "false"))
                 .andDo(print())
                 .andReturn()
                 .getResponse();
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatus());
         assertEquals(expectedResponse, response.getContentAsString());
-
     }
 
     @Test

@@ -27,7 +27,7 @@ public class TasksServiceTest {
     @Before
     public void setup() {
         tasksService = new TasksService();
-        ReflectionTestUtils.setField(tasksService, "apiUrl", "http://localhost:8080/%s");
+        ReflectionTestUtils.setField(tasksService, "API_URL", "http://localhost:8080/%s");
     }
 
     @Test
@@ -71,7 +71,7 @@ public class TasksServiceTest {
                         .withStatus(201)
                         .withHeader("Content-Type", "application/json")
                         .withBody(createTaskJson)));
-        JSONObject createTaskResponse = tasksService.createTask(1, createTaskInput);
+        JSONObject createTaskResponse = tasksService.createTask(createTaskInput.toMap());
         assertFalse(createTaskResponse.getBoolean("completed"));
         assertEquals(1, createTaskResponse.getJSONObject("contact").getInt("id"));
     }

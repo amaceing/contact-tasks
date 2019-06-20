@@ -18,10 +18,11 @@ public class TaskResource {
 
     private TasksService tasksService = new TasksService();
 
-    @RequestMapping(value = "contact/{contactId}/tasks/incomplete", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "contact/{contactId}/tasks", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity getTasks(
             @PathVariable(value="contactId") int contactId,
-            @RequestHeader(value="access-token") String accessToken
+            @RequestHeader(value="access-token") String accessToken,
+            @RequestParam(value="completed") boolean completed
     ) {
         tasksService.setAccessToken(accessToken);
 
@@ -32,7 +33,7 @@ public class TaskResource {
         JSONArray tasks = tasksService.getTasks(contactId);
         List<JSONObject> incompleteTasks = StreamSupport.stream(tasks.spliterator(), false)
                 .map(JSONObject.class::cast)
-                .filter(task -> !task.getBoolean("completed"))
+                .filter(task -> task.getBoolean("completed") == completed)
                 .collect(Collectors.toList());
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON_UTF8).body(incompleteTasks.toString());
     }
@@ -54,7 +55,7 @@ public class TaskResource {
             return contactDoesNotExist();
         }
 
-        JSONObject createdTask = tasksService.createTask(contactId, new JSONObject(taskInfo));
+        JSONObject createdTask = tasksService.createTask(taskInfo);
         return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.APPLICATION_JSON_UTF8).body(createdTask.toString());
     }
 

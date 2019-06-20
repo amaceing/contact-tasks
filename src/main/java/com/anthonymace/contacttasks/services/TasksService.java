@@ -9,12 +9,13 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.validation.constraints.NotNull;
 import java.util.Arrays;
+import java.util.Map;
 
 @Service
 public class TasksService {
 
     RestTemplate tasksRequest = new RestTemplate();
-    private String apiUrl = "https://api.infusionsoft.com/crm/rest/v1/%s";
+    private String API_URL = "https://api.infusionsoft.com/crm/rest/v1/%s";
 
     @NotNull
     private String accessToken;
@@ -25,7 +26,7 @@ public class TasksService {
 
     public JSONArray getTasks(int contactId) {
         String contactTasksUrl = String.format("tasks?contact_id=%d", contactId);
-        String tasksResourceUrl = String.format(apiUrl, contactTasksUrl);
+        String tasksResourceUrl = String.format(API_URL, contactTasksUrl);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON_UTF8));
@@ -39,23 +40,23 @@ public class TasksService {
         return tasks.getJSONArray("tasks");
     }
 
-    public JSONObject createTask(int contactId, JSONObject task) {
-        String createTaskResourceUrl = String.format(apiUrl, "tasks");
+    public JSONObject createTask(Map<String, Object> task) {
+        String createTaskResourceUrl = String.format(API_URL, "tasks");
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON_UTF8));
         headers.setBearerAuth(this.accessToken);
 
-        HttpEntity<JSONObject> request = new HttpEntity<>(task, headers);
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(task, headers);
         ResponseEntity<String> createTaskResponse =
-                tasksRequest.exchange(createTaskResourceUrl, HttpMethod.POST, request, String.class);
+            tasksRequest.exchange(createTaskResourceUrl, HttpMethod.POST, request, String.class);
 
         return new JSONObject(createTaskResponse.getBody());
     }
 
     public boolean contactExists(int contactId) {
         String contactTasksUrl = String.format("contacts/%d", contactId);
-        String contactResourceUrl = String.format(apiUrl, contactTasksUrl);
+        String contactResourceUrl = String.format(API_URL, contactTasksUrl);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON_UTF8));
