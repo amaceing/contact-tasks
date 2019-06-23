@@ -40,6 +40,7 @@ public class TaskResourceTest {
 
     @Mock
     private TasksService tasksService;
+
     @InjectMocks
     private TaskResource taskResource;
 
@@ -100,7 +101,7 @@ public class TaskResourceTest {
 
         JSONArray filteredResponse = new JSONArray(readFile("src/test/resources/incomplete-tasks.json"));
 
-        when(tasksService.contactExists(anyInt())).thenReturn(true);
+        when(tasksService.contactExists(anyInt())).thenReturn(200);
         when(tasksService.getTasks(anyInt())).thenReturn(expectedApiResponse);
 
         MockHttpServletResponse response = mockMvc.perform(get("/contact/1/tasks")
@@ -121,7 +122,7 @@ public class TaskResourceTest {
 
         String createTaskInput = expectedResponse.toString();
 
-        when(tasksService.contactExists(anyInt())).thenReturn(true);
+        when(tasksService.contactExists(anyInt())).thenReturn(200);
         when(tasksService.createTask(any())).thenReturn(expectedResponse);
 
         MockHttpServletResponse response = mockMvc.perform(post("/contact/1/task")
@@ -139,7 +140,7 @@ public class TaskResourceTest {
     public void testGetTasks400ResponseForNonExistantContact() throws Exception {
         String expectedResponse = readFile("src/test/resources/contact-does-not-exist-response.json");
 
-        when(tasksService.contactExists(anyInt())).thenReturn(false);
+        when(tasksService.contactExists(anyInt())).thenReturn(404);
 
         MockHttpServletResponse response = mockMvc.perform(get("/contact/1/tasks")
                 .header("access-token", "someAccessToken")
@@ -157,7 +158,7 @@ public class TaskResourceTest {
         String createTaskInput = readFile("src/test/resources/create-task-response.json");
         String expectedResponse = readFile("src/test/resources/contact-does-not-exist-response.json");
 
-        when(tasksService.contactExists(anyInt())).thenReturn(false);
+        when(tasksService.contactExists(anyInt())).thenReturn(404);
 
         MockHttpServletResponse response = mockMvc.perform(post("/contact/1/task")
                 .header("access-token", "someAccessToken")

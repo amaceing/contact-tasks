@@ -3,12 +3,12 @@ package com.anthonymace.contacttasks.services;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -17,18 +17,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
+@SpringBootTest
 public class TasksServiceTest {
 
-   private TasksService tasksService;
+    @Autowired
+    private TasksService tasksService;
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule();
-
-    @Before
-    public void setup() {
-        tasksService = new TasksService();
-        ReflectionTestUtils.setField(tasksService, "API_URL", "http://localhost:8080/%s");
-    }
 
     @Test
     public void testContactExistsReturnsFalseFor404() throws IOException {
@@ -37,7 +33,7 @@ public class TasksServiceTest {
                         .withStatus(404)
                         .withHeader("Content-Type", "application/json")
                         .withBody(readFile("src/test/resources/contact-does-not-exist-response.json"))));
-        assertFalse(tasksService.contactExists(1));
+        assertEquals(404, tasksService.contactExists(1));
     }
 
     @Test
@@ -47,7 +43,7 @@ public class TasksServiceTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(readFile("src/test/resources/get-contact-response.json"))));
-        assertTrue(tasksService.contactExists(1));
+        assertEquals(200, tasksService.contactExists(1));
     }
 
     @Test

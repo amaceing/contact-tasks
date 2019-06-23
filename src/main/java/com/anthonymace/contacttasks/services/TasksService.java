@@ -2,6 +2,7 @@ package com.anthonymace.contacttasks.services;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -14,8 +15,8 @@ import java.util.Map;
 @Service
 public class TasksService {
 
-    RestTemplate tasksRequest = new RestTemplate();
-    private String API_URL = "https://api.infusionsoft.com/crm/rest/v1/%s";
+    @Value("${api.url}")
+    private String API_URL;
 
     @NotNull
     private String accessToken;
@@ -25,6 +26,7 @@ public class TasksService {
     }
 
     public JSONArray getTasks(int contactId) {
+        RestTemplate tasksRequest = new RestTemplate();
         String contactTasksUrl = String.format("tasks?contact_id=%d", contactId);
         String tasksResourceUrl = String.format(API_URL, contactTasksUrl);
 
@@ -41,6 +43,7 @@ public class TasksService {
     }
 
     public JSONObject createTask(Map<String, Object> task) {
+        RestTemplate tasksRequest = new RestTemplate();
         String createTaskResourceUrl = String.format(API_URL, "tasks");
 
         HttpHeaders headers = new HttpHeaders();
@@ -54,7 +57,9 @@ public class TasksService {
         return new JSONObject(createTaskResponse.getBody());
     }
 
-    public boolean contactExists(int contactId) {
+    public int contactExists(int contactId) {
+        RestTemplate tasksRequest = new RestTemplate();
+        int statusCode = 200;
         String contactTasksUrl = String.format("contacts/%d", contactId);
         String contactResourceUrl = String.format(API_URL, contactTasksUrl);
 
@@ -65,14 +70,10 @@ public class TasksService {
         HttpEntity<String> request = new HttpEntity<>(headers);
 
         try {
-            tasksRequest.exchange(contactResourceUrl, HttpMethod.GET, request, String.class);
+            statusCode = tasksRequest.exchange(contactResourceUrl, HttpMethod.GET, request, String.class).getStatusCode().value();
         } catch (HttpClientErrorException e) {
-            // .exchange throws an exception when it 404s (from the stub), hard to test
-            // but this is gross.
-            // REVISIT
-            return false;
+            statusCode = e.getRawStatusCode();
         }
-        return true;
-
+        return statusCode;
     }
 }

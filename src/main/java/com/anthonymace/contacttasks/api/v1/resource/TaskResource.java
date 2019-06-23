@@ -3,6 +3,7 @@ package com.anthonymace.contacttasks.api.v1.resource;
 import com.anthonymace.contacttasks.services.TasksService;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +17,8 @@ import java.util.stream.StreamSupport;
 @RestController
 public class TaskResource {
 
-    private TasksService tasksService = new TasksService();
+    @Autowired
+    private TasksService tasksService;
 
     @RequestMapping(value = "contact/{contactId}/tasks", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity getTasks(
@@ -26,7 +28,7 @@ public class TaskResource {
     ) {
         tasksService.setAccessToken(accessToken);
 
-        if (!tasksService.contactExists(contactId)) {
+        if (tasksService.contactExists(contactId) == 404) {
             return contactDoesNotExist();
         }
 
@@ -51,7 +53,7 @@ public class TaskResource {
     ) {
         tasksService.setAccessToken(accessToken);
 
-        if (!tasksService.contactExists(contactId)) {
+        if (tasksService.contactExists(contactId) == 404) {
             return contactDoesNotExist();
         }
 
