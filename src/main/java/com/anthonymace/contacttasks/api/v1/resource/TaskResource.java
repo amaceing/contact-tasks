@@ -1,0 +1,69 @@
+package com.anthonymace.contacttasks.api.v1.resource;
+
+import com.anthonymace.contacttasks.services.TasksService;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+@RestController
+public class TaskResource {
+
+    @Autowired
+    private TasksService tasksService;
+
+    @RequestMapping(value = "contact/{contactId}/tasks", method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity getTasks(
+            @PathVariable(value="contactId") int contactId,
+            @RequestHeader(value="access-token") String accessToken,
+            @RequestParam(value="completed") boolean completed
+    ) {
+        tasksService.setAccessToken(accessToken);
+
+        if (tasksService.contactExists(contactId) == 404) {
+            return contactDoesNotExist();
+        }
+
+        JSONArray tasks = tasksService.getTasks(contactId);
+        List<JSONObject> incompleteTasks = StreamSupport.stream(tasks.spliterator(), false)
+                .map(JSONObject.class::cast)
+                .filter(task -> task.getBoolean("completed") == completed)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON_UTF8).body(incompleteTasks.toString());
+    }
+
+    @RequestMapping(
+            value = "contact/{contactId}/task",
+            method = RequestMethod.POST,
+            consumes="application/json",
+            produces = "application/json"
+    )
+    public ResponseEntity createTask(
+            @PathVariable(value="contactId") int contactId,
+            @RequestHeader(value="access-token") String accessToken,
+            @RequestBody Map<String, Object> taskInfo
+    ) {
+        tasksService.setAccessToken(accessToken);
+
+        if (tasksService.contactExists(contactId) == 404) {
+            return contactDoesNotExist();
+        }
+
+        JSONObject createdTask = tasksService.createTask(taskInfo);
+        return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.APPLICATION_JSON_UTF8).body(createdTask.toString());
+    }
+
+    private ResponseEntity contactDoesNotExist() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Contact does not exist");
+        return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON_UTF8).body(response);
+    }
+}
